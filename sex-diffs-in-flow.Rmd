@@ -59,9 +59,11 @@ The package can be found at <https://github.com/PLAY-behaviorome/databraryapi>.
 
 ## Import optic flow CSVs
 
-List the CSVs before we import them. But first, let's assign the `vol_id` and `session_id` variables: `r vol_id <- 81` and `r session_id = 35545`.
+List the CSVs before we import them. But first, let's assign the `vol_id` and `session_id` variables.
 
-```{r}
+```{r list-assets}
+vol_id <- 81
+session_id = 35545
 databraryapi::list_assets_in_session(vol_id, session_id)
 ```
 
@@ -70,17 +72,17 @@ Isn't reproducible science fun?
 Now, we import these files noting the `asset_id` values from the table.
 We do this one at a time so we can confirm everything is working.
 
-```{r}
+```{r read-patt-hist}
 patt_hist <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165805)
 str(patt_hist)
 ```
 
-```{r}
+```{r read-spd-bins}
 spd_bins <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165804)
 str(spd_bins)
 ```
 
-```{r}
+```{r read-spd-fits}
 spd_fits <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165803)
 str(spd_fits)
 ```
@@ -89,7 +91,8 @@ This is looking good.
 
 ## Import participant data
 
-```{r}
+```{r download-session}
+databraryapi::login_db(params$db_account)
 participants <- databraryapi::download_session_csv(vol_id)
 str(participants)
 ```
@@ -106,7 +109,7 @@ It's not essential, but I prefer lower case variable names with underscores as s
 Oddly, an age variable is not downloaded.
 We can address that later.
 
-```{r}
+```{r clean-participants}
 participants <- participants %>%
   select(participant.ID, participant.gender, context.country) %>%
   rename(ID = participant.ID, gender = participant.gender, country = context.country)
@@ -114,13 +117,37 @@ participants <- participants %>%
 
 ## Merge files
 
-```{r}
+```{r merge-patt-hist}
 patt_hist <- dplyr::left_join(patt_hist, participants, by = "ID")
 ```
 
 It looks like there may be some inconsistencies in our `ID` variable.
-We should fix those and re-run.
 
+### Diagnosing issues with ID
+
+```{r diagnose-id}
+unique(participants$ID)
+unique(patt_hist$ID)
+unique(spd_bins$ID)
+unique(spd_fits$ID)
+```
+
+It appears that we have optic flow data for $n=$ `r length(unique(spd_fits$ID))` participants, but there are $n=$ `r length(unique(participants$ID))` total in the repository.
+This isn't a problem, but I thought we had more optic flow data to analyze.
+
+## Merging the speed data with participants
+
+```{r merge-spd-bins}
+spd_bins <- dplyr::left_join(spd_bins, participants, by = "ID")
+```
+
+```{r merge-spd-fits}
+spd_fits <- dplyr::left_join(spd_fits, participants, by = "ID")
+```
 # Visualization
+
+## Plan
+
+Yiming, this is for you.
 
 # Analysis

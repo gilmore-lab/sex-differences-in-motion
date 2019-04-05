@@ -307,7 +307,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Sex differences in experienced optic flow</h1>
 <h4 class="author">Rick O. Gilmore &amp; Yiming Qian</h4>
-<h4 class="date">2019-04-05 16:19:55</h4>
+<h4 class="date">2019-04-05 17:22:08</h4>
 
 </div>
 
@@ -335,8 +335,10 @@ div.tocify {
 </div>
 <div id="import-optic-flow-csvs" class="section level2">
 <h2><span class="header-section-number">2.2</span> Import optic flow CSVs</h2>
-<p>List the CSVs before we import them. But first, let’s assign the <code>vol_id</code> and <code>session_id</code> variables: and .</p>
-<pre class="r"><code>databraryapi::list_assets_in_session(vol_id, session_id)</code></pre>
+<p>List the CSVs before we import them. But first, let’s assign the <code>vol_id</code> and <code>session_id</code> variables.</p>
+<pre class="r"><code>vol_id &lt;- 81
+session_id = 35545
+databraryapi::list_assets_in_session(vol_id, session_id)</code></pre>
 <pre><code>##   asset_id asset_type_id classification                   name permission
 ## 1   165805             2              3 pattern_histogram_bins          1
 ## 2   165804             2              3   speed_histogram_bins          1
@@ -392,16 +394,19 @@ str(spd_fits)</code></pre>
 </div>
 <div id="import-participant-data" class="section level2">
 <h2><span class="header-section-number">2.3</span> Import participant data</h2>
+<pre class="r"><code>databraryapi::login_db(params$db_account)</code></pre>
+<pre><code>## Login successful.</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>participants &lt;- databraryapi::download_session_csv(vol_id)
 str(participants)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    84 obs. of  12 variables:
 ##  $ session_id           : int  7577 7578 7580 7581 7583 7584 7587 7588 7589 7699 ...
 ##  $ session_name         : Factor w/ 4 levels &quot;&quot;,&quot;ICDL-EpiRob-15&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ session_date         : Factor w/ 6 levels &quot;&quot;,&quot;2012-XX-XX&quot;,..: 3 3 3 3 3 3 3 3 3 3 ...
+##  $ session_date         : Factor w/ 53 levels &quot;&quot;,&quot;2012-04-07&quot;,..: 21 20 20 19 19 20 20 21 21 20 ...
 ##  $ session_release      : Factor w/ 3 levels &quot;&quot;,&quot;EXCERPTS&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
 ##  $ participant.ID       : Factor w/ 81 levels &quot;&quot;,&quot;003KII&quot;,&quot;004AB&quot;,..: 6 22 30 32 46 48 49 66 67 77 ...
 ##  $ participant.info     : Factor w/ 39 levels &quot;&quot;,&quot;14830&quot;,&quot;14869&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ participant.birthdate: logi  NA NA NA NA NA NA ...
+##  $ participant.birthdate: Factor w/ 62 levels &quot;&quot;,&quot;2011-12-06&quot;,..: 36 28 26 23 21 22 20 18 17 16 ...
 ##  $ participant.gender   : Factor w/ 3 levels &quot;&quot;,&quot;Female&quot;,&quot;Male&quot;: 3 2 2 3 2 2 3 2 2 3 ...
 ##  $ condition.name       : Factor w/ 2 levels &quot;&quot;,&quot;motion-stationary&quot;: 2 2 2 2 2 2 2 2 2 2 ...
 ##  $ context.setting      : Factor w/ 2 levels &quot;&quot;,&quot;Home&quot;: 2 2 2 2 2 2 2 2 2 2 ...
@@ -424,11 +429,51 @@ str(participants)</code></pre>
 <pre class="r"><code>patt_hist &lt;- dplyr::left_join(patt_hist, participants, by = &quot;ID&quot;)</code></pre>
 <pre><code>## Warning: Column `ID` joining factors with different levels, coercing to
 ## character vector</code></pre>
-<p>It looks like there may be some inconsistencies in our <code>ID</code> variable. We should fix those and re-run.</p>
+<p>It looks like there may be some inconsistencies in our <code>ID</code> variable.</p>
+<div id="diagnosing-issues-with-id" class="section level3">
+<h3><span class="header-section-number">3.2.1</span> Diagnosing issues with ID</h3>
+<pre class="r"><code>unique(participants$ID)</code></pre>
+<pre><code>##  [1] 008KEI 017MAI 024DAI 025TAI 034SAI 036NII 036VII 048REI 048YAI 054AJI
+## [11] 058LAI 006AP  009SS  022JL  025TT  034JC  034NW  036MR  046TE  047MS 
+## [21] 053KD  057AP         015KRI 024KAI 026SAI 030JOI 037KAI 038ALI 043GOI
+## [31] 051SAI 052RDI 003KII 011MOI 013ABI 013SAI 015AKI 015LAI 015THI 018KAI
+## [41] 023MMI 026JAI 028KUI 031VAI 037THI 040KRI 043JAI 046YUI 053GII 063NII
+## [51] 004AB  011EA  012TT  013LS  014SN  015JM  016TF  019JC  023NF  024AM 
+## [61] 026AR  027SS  028CK  030FD  031HW  037SM  038RB  039ED  040ER  044ET 
+## [71] 045NA  048KG  049JC  050AB  051DW  053MT  062HW  006MOI 017EW  018MT 
+## [81] 049KRI
+## 81 Levels:  003KII 004AB 006AP 006MOI 008KEI 009SS 011EA 011MOI ... 063NII</code></pre>
+<pre class="r"><code>unique(patt_hist$ID)</code></pre>
+<pre><code>##  [1] &quot;006AP&quot; &quot;006MO&quot; &quot;009SS&quot; &quot;017MA&quot; &quot;018MT&quot; &quot;022JL&quot; &quot;024DA&quot; &quot;025TA&quot;
+##  [9] &quot;025TT&quot; &quot;034JC&quot; &quot;034NW&quot; &quot;034SA&quot; &quot;036MR&quot; &quot;036NI&quot; &quot;036VI&quot; &quot;046TE&quot;
+## [17] &quot;048RE&quot; &quot;048YA&quot; &quot;053KD&quot; &quot;054AJ&quot; &quot;057AP&quot; &quot;058LA&quot;</code></pre>
+<pre class="r"><code>unique(spd_bins$ID)</code></pre>
+<pre><code>##  [1] 006AP 006MO 009SS 017MA 018MT 022JL 024DA 025TA 025TT 034JC 034NW
+## [12] 034SA 036MR 036NI 036VI 046TE 048RE 048YA 053KD 054AJ 057AP 058LA
+## 22 Levels: 006AP 006MO 009SS 017MA 018MT 022JL 024DA 025TA 025TT ... 058LA</code></pre>
+<pre class="r"><code>unique(spd_fits$ID)</code></pre>
+<pre><code>##  [1] 006AP 006MO 009SS 017MA 018MT 022JL 024DA 025TA 025TT 034JC 034NW
+## [12] 034SA 036MR 036NI 036VI 046TE 048RE 048YA 053KD 054AJ 057AP 058LA
+## 22 Levels: 006AP 006MO 009SS 017MA 018MT 022JL 024DA 025TA 025TT ... 058LA</code></pre>
+<p>It appears that we have optic flow data for $n=$22 participants, but there are $n=$81 total in the repository. This isn’t a problem, but I thought we had more optic flow data to analyze.</p>
+</div>
+</div>
+<div id="merging-the-speed-data-with-participants" class="section level2">
+<h2><span class="header-section-number">3.3</span> Merging the speed data with participants</h2>
+<pre class="r"><code>spd_bins &lt;- dplyr::left_join(spd_bins, participants, by = &quot;ID&quot;)</code></pre>
+<pre><code>## Warning: Column `ID` joining factors with different levels, coercing to
+## character vector</code></pre>
+<pre class="r"><code>spd_fits &lt;- dplyr::left_join(spd_fits, participants, by = &quot;ID&quot;)</code></pre>
+<pre><code>## Warning: Column `ID` joining factors with different levels, coercing to
+## character vector</code></pre>
 </div>
 </div>
 <div id="visualization" class="section level1">
 <h1><span class="header-section-number">4</span> Visualization</h1>
+<div id="plan" class="section level2">
+<h2><span class="header-section-number">4.1</span> Plan</h2>
+<p>Yiming, this is for you.</p>
+</div>
 </div>
 <div id="analysis" class="section level1">
 <h1><span class="header-section-number">5</span> Analysis</h1>
