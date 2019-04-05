@@ -1,0 +1,154 @@
+---
+title: "Data gathering & cleaning from archival sources"
+author: "Rick O. Gilmore"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    code_folding: show
+    self_contained: false
+params:
+  db_account: rogilmore@psu.edu
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+# Background
+
+This document describes the data gathering and data cleaning steps involved in analyzing some previous optic flow data from the perspective of sex differences.
+
+The original data were estimates of the optic flow speeds and direction patterns derived from head-mounted videos of infants. 
+The original video data can be found here: 
+
+Jayaraman, S., Smith, L.B., Raudies, F. & Gilmore, R.O. (2014). Natural Scene Statistics of Visual Experience Across Development and Culture. Databrary. Retrieved April 5, 2019 from http://doi.org/10.17910/B7988V.
+
+This Databrary volume also contains links to talks given at ICIS 2016 and EpiRob 2015.
+
+In addition to the optic flow data, there are data derived from human coders who judged whether the infants were stationary or moving in the videos.
+
+This repo gathers and cleans these data so that we can ask questions about the extent to which sex differences in optic flow experiences seem to occur in our sample.
+The cleaned data files will ultimately go back on Databrary so that we can produce a reproducible analysis workflow.
+
+# Data gathering
+
+I'm going to begin with an attempt to categorize the separate datasets (in `data/` by content, focusing on those that appear to be most relevant for the question at hand.
+
+## `pattern-histogram-bins.csv`
+
+```{r}
+pat_hist_bins <- read_csv('data/pattern-histogram-bins.csv')
+str(pat_hist_bins)
+```
+
+This file contains data about the extent to which segments of video (5 s in duration or 150 frames @ 30 frames/s) correlated with one of the optic flow pattern types: left/right, up/down, inward/outward, or clockwise/counter clockwise.
+The data report a `Corr.Bin.Ctr` and `Corr.Bin.Count` for each component of a histogram returned for each 5s segment and for each pattern type (`Pattern`).
+
+We also have starting (`Start_fr`) and ending (`End_fr`) video frame values, the `Participant.ID`, age group (`AgeMatchGroup`), participant country of origin (`Country`) to work with.
+Finally, each segment was coded by a human observer assigned to judge whether the infant was moving (actively or passively) or stationary during the sampled video segment.
+
+Aside from some challenges in visualizing the data, it should be relatively straightforward to add a `gender` variable to this data file.
+
+## `speed-histogram-bins.csv`
+
+```{r}
+speed_hist_bins <- read_csv('data/speed-histogram-bins.csv')
+str(speed_hist_bins)
+```
+
+This data file contains the results of fitting a gamma ($\Gamma$) distribution to the optic flow speed data for each participant.
+
+According to 
+
+Gilmore, R. O., Raudies, F., & Jayaraman, S. (2015). What accounts for developmental shifts in optic flow sensitivity? 2015 Joint IEEE International Conference on Development and Learning and Epigenetic Robotics (ICDL-EpiRob) (pp. 19–25). Presented at the 2015 Joint IEEE International Conference on Development and Learning and Epigenetic Robotics (ICDL-EpiRob), ieeexplore.ieee.org. Retrieved from http://dx.doi.org/10.1109/DEVLRN.2015.7345450
+
+the following function was fit to the speed histogram:
+
+γ(x;k,θ,a)=axk−1exp(−x/θ)θkΓ(k)
+
+$\gamma(x; \kappa, \theta, \alpha)=\alpha\frac{x^{\kappa - 1}exp(-x^{\theta})}{\theta^{\kappa}\Gamma(\kappa)}$
+
+The data file contains `Participant.ID`, `Country`, `AgeMatchGroup`, and `Motion.Status` variables familiar from `data/pattern-histogram-bins.csv`.
+
+The `DF` and `ChiSquare` variables appear to describe the `goodness-of-fit`.
+
+I think the `Speed` variable refers to each speed bin (in deg/s) by observer motion category {`moving`, `stationary`}.
+I will need to reread the paper for more insights.
+
+## `speed-histogram-fits.csv` 
+
+```{r}
+speed_hist_fits <- read_csv('data/speed-histogram-fits.csv')
+str(speed_hist_fits)
+```
+
+These data contain summary statistical measures of the fitted speed distributions: `Mean.spd`, `Median.spd`.
+The data also include the fitted parameters from the \Gamma fit, where `a` is the $\alpha$ parameter, `k` is $\kappa$, `theta` is $\theta$, `r2` is the $r^2$ value for the fit.
+The `p05`, `p01`, `p005`, and `p001` nominal [0,1] variables may refer to a test between the `stationary` and `moving` conditions.
+
+It should be straightforward to add `gender` and conduct some simple visualizations with these data.
+
+## `wks.sex.csv`
+
+```{r}
+wks_sex <- read_csv('data/wks.sex.csv')
+str(wks_sex)
+```
+
+This file contains easily interpretable participant-specific metadata.
+
+# Data cleaning
+
+## Plan of attack
+
+Participant specific metadata like sex, age, and country of origin are organized within the Databrary spreadsheet.
+I will use that source.
+
+It makes the most sense to
+
+- 'strip' these metadata fields from the `data/pattern-histogram-bins.csv`, `data/speed-histogram-fits.csv`, and `data/speed-histogram-bins.csv` files.
+- Upload the 'clean' files to an appropriate `materials` folder on Databrary.
+- Develop analysis workflows anchored to the Databrary volume for reproducibility.
+
+## Strip redundant fields and resave
+
+```{r}
+pattern_histogram_bins <- pat_hist_bins %>%
+  select(-Country, -AgeMatchGroup) %>%
+  rename(ID = Participant.ID, video = Video, motion_status = Motion.status,
+         pattern_type = Pattern, start_fr = Start_fr, end_fr = End_fr,
+         n_frames = N_fr,
+         corr_bin_ctr = Corr.Bin.Ctr, corr_bin_count = Corr.Bin.Count)
+write_csv(pattern_histogram_bins, 'data/pattern_histogram_bins.csv')
+```
+
+```{r}
+speed_histogram_bins <- speed_hist_bins %>%
+  select(-Country, -AgeMatchGroup) %>%
+  rename(ID = Participant.ID, motion_status = Motion.status,
+         chi_square = ChiSquare, df = DF, p_val = Pval,
+         speed_deg_sec = Speed,
+         n_obs = N.obs)
+write_csv(speed_histogram_bins, 'data/speed_histogram_bins.csv')
+```
+
+```{r}
+speed_histogram_fits <- speed_hist_fits %>%
+  select(-Country, -AgeMatchGroup) %>%
+  rename(ID = Participant.ID, motion_status = Motion.status, 
+         mean_speed = Mean.spd,
+         median_spd = Median.spd, alpha = a, kappa = k)
+write_csv(speed_histogram_fits, 'data/speed_histogram_fits.csv')
+```
+
+Next, I will upload `pattern_histogram_bins.csv`, `speed_histogram_bins.csv`, and `speed_histogram_fits.csv` to 
+
+Jayaraman, S., Smith, L.B., Raudies, F. & Gilmore, R.O. (2014). Natural Scene Statistics of Visual Experience Across Development and Culture. Databrary. Retrieved April 5, 2019 from http://doi.org/10.17910/B7988V.
+
+These files are in <https://nyu.databrary.org/volume/81/slot/35545/-> or `vol_id = 81`, `session_id = 35545`. 

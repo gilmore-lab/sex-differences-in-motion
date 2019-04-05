@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Rick O. Gilmore" />
+
+
+<title>Data gathering &amp; cleaning from archival sources</title>
+
+<script src="gathering-cleaning_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="gathering-cleaning_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="gathering-cleaning_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="gathering-cleaning_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="gathering-cleaning_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="gathering-cleaning_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="gathering-cleaning_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="gathering-cleaning_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="gathering-cleaning_files/navigation-1.1/tabsets.js"></script>
+<script src="gathering-cleaning_files/navigation-1.1/codefolding.js"></script>
+<link href="gathering-cleaning_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="gathering-cleaning_files/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Data gathering &amp; cleaning from archival sources</h1>
+<h4 class="author">Rick O. Gilmore</h4>
+<h4 class="date">2019-04-05 16:19:46</h4>
+
+</div>
+
+
+<div id="background" class="section level1">
+<h1><span class="header-section-number">1</span> Background</h1>
+<p>This document describes the data gathering and data cleaning steps involved in analyzing some previous optic flow data from the perspective of sex differences.</p>
+<p>The original data were estimates of the optic flow speeds and direction patterns derived from head-mounted videos of infants. The original video data can be found here:</p>
+<p>Jayaraman, S., Smith, L.B., Raudies, F. &amp; Gilmore, R.O. (2014). Natural Scene Statistics of Visual Experience Across Development and Culture. Databrary. Retrieved April 5, 2019 from <a href="http://doi.org/10.17910/B7988V" class="uri">http://doi.org/10.17910/B7988V</a>.</p>
+<p>This Databrary volume also contains links to talks given at ICIS 2016 and EpiRob 2015.</p>
+<p>In addition to the optic flow data, there are data derived from human coders who judged whether the infants were stationary or moving in the videos.</p>
+<p>This repo gathers and cleans these data so that we can ask questions about the extent to which sex differences in optic flow experiences seem to occur in our sample. The cleaned data files will ultimately go back on Databrary so that we can produce a reproducible analysis workflow.</p>
+</div>
+<div id="data-gathering" class="section level1">
+<h1><span class="header-section-number">2</span> Data gathering</h1>
+<p>I’m going to begin with an attempt to categorize the separate datasets (in <code>data/</code> by content, focusing on those that appear to be most relevant for the question at hand.</p>
+<div id="pattern-histogram-bins.csv" class="section level2">
+<h2><span class="header-section-number">2.1</span> <code>pattern-histogram-bins.csv</code></h2>
+<pre class="r"><code>pat_hist_bins &lt;- read_csv(&#39;data/pattern-histogram-bins.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Participant.ID = col_character(),
+##   Video = col_double(),
+##   Motion.status = col_character(),
+##   Pattern = col_character(),
+##   Start_fr = col_double(),
+##   End_fr = col_double(),
+##   N_fr = col_double(),
+##   Corr.Bin.Ctr = col_double(),
+##   Corr.Bin.Count = col_double(),
+##   Country = col_character(),
+##   AgeMatchGroup = col_double()
+## )</code></pre>
+<pre class="r"><code>str(pat_hist_bins)</code></pre>
+<pre><code>## Classes &#39;spec_tbl_df&#39;, &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;: 13200 obs. of  11 variables:
+##  $ Participant.ID: chr  &quot;006AP&quot; &quot;006AP&quot; &quot;006AP&quot; &quot;006AP&quot; ...
+##  $ Video         : num  5 5 5 5 4 4 4 4 4 4 ...
+##  $ Motion.status : chr  &quot;Stationary&quot; &quot;Stationary&quot; &quot;Stationary&quot; &quot;Stationary&quot; ...
+##  $ Pattern       : chr  &quot;exp&quot; &quot;cw&quot; &quot;left&quot; &quot;up&quot; ...
+##  $ Start_fr      : num  48162 48162 48162 48162 34106 ...
+##  $ End_fr        : num  48312 48312 48312 48312 34256 ...
+##  $ N_fr          : num  150 150 150 150 150 150 150 150 150 150 ...
+##  $ Corr.Bin.Ctr  : num  -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 ...
+##  $ Corr.Bin.Count: num  0 0 36 36 0 0 8 8 0 1 ...
+##  $ Country       : chr  &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; ...
+##  $ AgeMatchGroup : num  6 6 6 6 6 6 6 6 6 6 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   Participant.ID = col_character(),
+##   ..   Video = col_double(),
+##   ..   Motion.status = col_character(),
+##   ..   Pattern = col_character(),
+##   ..   Start_fr = col_double(),
+##   ..   End_fr = col_double(),
+##   ..   N_fr = col_double(),
+##   ..   Corr.Bin.Ctr = col_double(),
+##   ..   Corr.Bin.Count = col_double(),
+##   ..   Country = col_character(),
+##   ..   AgeMatchGroup = col_double()
+##   .. )</code></pre>
+<p>This file contains data about the extent to which segments of video (5 s in duration or 150 frames @ 30 frames/s) correlated with one of the optic flow pattern types: left/right, up/down, inward/outward, or clockwise/counter clockwise. The data report a <code>Corr.Bin.Ctr</code> and <code>Corr.Bin.Count</code> for each component of a histogram returned for each 5s segment and for each pattern type (<code>Pattern</code>).</p>
+<p>We also have starting (<code>Start_fr</code>) and ending (<code>End_fr</code>) video frame values, the <code>Participant.ID</code>, age group (<code>AgeMatchGroup</code>), participant country of origin (<code>Country</code>) to work with. Finally, each segment was coded by a human observer assigned to judge whether the infant was moving (actively or passively) or stationary during the sampled video segment.</p>
+<p>Aside from some challenges in visualizing the data, it should be relatively straightforward to add a <code>gender</code> variable to this data file.</p>
+</div>
+<div id="speed-histogram-bins.csv" class="section level2">
+<h2><span class="header-section-number">2.2</span> <code>speed-histogram-bins.csv</code></h2>
+<pre class="r"><code>speed_hist_bins &lt;- read_csv(&#39;data/speed-histogram-bins.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Participant.ID = col_character(),
+##   Country = col_character(),
+##   AgeMatchGroup = col_double(),
+##   ChiSquare = col_double(),
+##   DF = col_double(),
+##   Pval = col_double(),
+##   Speed = col_double(),
+##   Motion.status = col_character(),
+##   N.obs = col_double()
+## )</code></pre>
+<pre class="r"><code>str(speed_hist_bins)</code></pre>
+<pre><code>## Classes &#39;spec_tbl_df&#39;, &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;: 4444 obs. of  9 variables:
+##  $ Participant.ID: chr  &quot;006AP&quot; &quot;006AP&quot; &quot;006AP&quot; &quot;006AP&quot; ...
+##  $ Country       : chr  &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; ...
+##  $ AgeMatchGroup : num  6 6 6 6 6 6 6 6 6 6 ...
+##  $ ChiSquare     : num  2.31e+09 2.31e+09 2.31e+09 2.31e+09 2.31e+09 ...
+##  $ DF            : num  100 100 100 100 100 100 100 100 100 100 ...
+##  $ Pval          : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Speed         : num  0 0 1 1 2 2 3 3 4 4 ...
+##  $ Motion.status : chr  &quot;Moving&quot; &quot;Stationary&quot; &quot;Moving&quot; &quot;Stationary&quot; ...
+##  $ N.obs         : num  3.39e+08 4.06e+08 9.56e+06 2.75e+08 1.93e+07 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   Participant.ID = col_character(),
+##   ..   Country = col_character(),
+##   ..   AgeMatchGroup = col_double(),
+##   ..   ChiSquare = col_double(),
+##   ..   DF = col_double(),
+##   ..   Pval = col_double(),
+##   ..   Speed = col_double(),
+##   ..   Motion.status = col_character(),
+##   ..   N.obs = col_double()
+##   .. )</code></pre>
+<p>This data file contains the results of fitting a gamma (<span class="math inline">\(\Gamma\)</span>) distribution to the optic flow speed data for each participant.</p>
+<p>According to</p>
+<p>Gilmore, R. O., Raudies, F., &amp; Jayaraman, S. (2015). What accounts for developmental shifts in optic flow sensitivity? 2015 Joint IEEE International Conference on Development and Learning and Epigenetic Robotics (ICDL-EpiRob) (pp. 19–25). Presented at the 2015 Joint IEEE International Conference on Development and Learning and Epigenetic Robotics (ICDL-EpiRob), ieeexplore.ieee.org. Retrieved from <a href="http://dx.doi.org/10.1109/DEVLRN.2015.7345450" class="uri">http://dx.doi.org/10.1109/DEVLRN.2015.7345450</a></p>
+<p>the following function was fit to the speed histogram:</p>
+<p>γ(x;k,θ,a)=axk−1exp(−x/θ)θkΓ(k)</p>
+<p><span class="math inline">\(\gamma(x; \kappa, \theta, \alpha)=\alpha\frac{x^{\kappa - 1}exp(-x^{\theta})}{\theta^{\kappa}\Gamma(\kappa)}\)</span></p>
+<p>The data file contains <code>Participant.ID</code>, <code>Country</code>, <code>AgeMatchGroup</code>, and <code>Motion.Status</code> variables familiar from <code>data/pattern-histogram-bins.csv</code>.</p>
+<p>The <code>DF</code> and <code>ChiSquare</code> variables appear to describe the <code>goodness-of-fit</code>.</p>
+<p>I think the <code>Speed</code> variable refers to each speed bin (in deg/s) by observer motion category {<code>moving</code>, <code>stationary</code>}. I will need to reread the paper for more insights.</p>
+</div>
+<div id="speed-histogram-fits.csv" class="section level2">
+<h2><span class="header-section-number">2.3</span> <code>speed-histogram-fits.csv</code></h2>
+<pre class="r"><code>speed_hist_fits &lt;- read_csv(&#39;data/speed-histogram-fits.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Participant.ID = col_character(),
+##   Country = col_character(),
+##   Mean.spd = col_double(),
+##   Median.spd = col_double(),
+##   a = col_double(),
+##   k = col_double(),
+##   theta = col_double(),
+##   r2 = col_double(),
+##   Motion.status = col_character(),
+##   p05 = col_double(),
+##   p01 = col_double(),
+##   p005 = col_double(),
+##   p0001 = col_double(),
+##   AgeMatchGroup = col_double()
+## )</code></pre>
+<pre class="r"><code>str(speed_hist_fits)</code></pre>
+<pre><code>## Classes &#39;spec_tbl_df&#39;, &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;: 44 obs. of  14 variables:
+##  $ Participant.ID: chr  &quot;006AP&quot; &quot;006AP&quot; &quot;006MO&quot; &quot;006MO&quot; ...
+##  $ Country       : chr  &quot;U.S.&quot; &quot;U.S.&quot; &quot;India&quot; &quot;India&quot; ...
+##  $ Mean.spd      : num  19.7 37.8 31.4 29.5 18.8 ...
+##  $ Median.spd    : num  15 44 34 30 16 42 39 13 40 25 ...
+##  $ a             : num  0.85 0.97 0.86 0.89 0.76 0.75 0.82 0.68 0.85 0.85 ...
+##  $ k             : num  1.01 2.19 2.62 1.38 1.25 1.86 1.82 1.01 2 1.26 ...
+##  $ theta         : num  17.4 26.5 15.1 31.2 15.8 ...
+##  $ r2            : num  0.98 0.93 0.99 0.99 0.98 0.97 0.9 0.95 0.94 0.99 ...
+##  $ Motion.status : chr  &quot;Stationary&quot; &quot;Moving&quot; &quot;Moving&quot; &quot;Stationary&quot; ...
+##  $ p05           : num  1 1 0 0 1 1 1 1 1 1 ...
+##  $ p01           : num  1 1 0 0 1 1 1 1 1 1 ...
+##  $ p005          : num  1 1 0 0 1 1 1 1 1 1 ...
+##  $ p0001         : num  1 1 0 0 1 1 1 1 0 0 ...
+##  $ AgeMatchGroup : num  6 6 6 6 9 9 17.5 17.5 17.5 17.5 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   Participant.ID = col_character(),
+##   ..   Country = col_character(),
+##   ..   Mean.spd = col_double(),
+##   ..   Median.spd = col_double(),
+##   ..   a = col_double(),
+##   ..   k = col_double(),
+##   ..   theta = col_double(),
+##   ..   r2 = col_double(),
+##   ..   Motion.status = col_character(),
+##   ..   p05 = col_double(),
+##   ..   p01 = col_double(),
+##   ..   p005 = col_double(),
+##   ..   p0001 = col_double(),
+##   ..   AgeMatchGroup = col_double()
+##   .. )</code></pre>
+<p>These data contain summary statistical measures of the fitted speed distributions: <code>Mean.spd</code>, <code>Median.spd</code>. The data also include the fitted parameters from the fit, where <code>a</code> is the <span class="math inline">\(\alpha\)</span> parameter, <code>k</code> is <span class="math inline">\(\kappa\)</span>, <code>theta</code> is <span class="math inline">\(\theta\)</span>, <code>r2</code> is the <span class="math inline">\(r^2\)</span> value for the fit. The <code>p05</code>, <code>p01</code>, <code>p005</code>, and <code>p001</code> nominal [0,1] variables may refer to a test between the <code>stationary</code> and <code>moving</code> conditions.</p>
+<p>It should be straightforward to add <code>gender</code> and conduct some simple visualizations with these data.</p>
+</div>
+<div id="wks.sex.csv" class="section level2">
+<h2><span class="header-section-number">2.4</span> <code>wks.sex.csv</code></h2>
+<pre class="r"><code>wks_sex &lt;- read_csv(&#39;data/wks.sex.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   subj = col_character(),
+##   sex = col_character(),
+##   age.wks = col_double(),
+##   country = col_character()
+## )</code></pre>
+<pre class="r"><code>str(wks_sex)</code></pre>
+<pre><code>## Classes &#39;spec_tbl_df&#39;, &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;: 64 obs. of  4 variables:
+##  $ subj   : chr  &quot;004AB&quot; &quot;006AP&quot; &quot;007OW&quot; &quot;009SS&quot; ...
+##  $ sex    : chr  &quot;M&quot; &quot;F&quot; &quot;M&quot; &quot;F&quot; ...
+##  $ age.wks: num  4 6 7 9 11 12 13 15 16 17 ...
+##  $ country: chr  &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; &quot;U.S.&quot; ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   subj = col_character(),
+##   ..   sex = col_character(),
+##   ..   age.wks = col_double(),
+##   ..   country = col_character()
+##   .. )</code></pre>
+<p>This file contains easily interpretable participant-specific metadata.</p>
+</div>
+</div>
+<div id="data-cleaning" class="section level1">
+<h1><span class="header-section-number">3</span> Data cleaning</h1>
+<div id="plan-of-attack" class="section level2">
+<h2><span class="header-section-number">3.1</span> Plan of attack</h2>
+<p>Participant specific metadata like sex, age, and country of origin are organized within the Databrary spreadsheet. I will use that source.</p>
+<p>It makes the most sense to</p>
+<ul>
+<li>‘strip’ these metadata fields from the <code>data/pattern-histogram-bins.csv</code>, <code>data/speed-histogram-fits.csv</code>, and <code>data/speed-histogram-bins.csv</code> files.</li>
+<li>Upload the ‘clean’ files to an appropriate <code>materials</code> folder on Databrary.</li>
+<li>Develop analysis workflows anchored to the Databrary volume for reproducibility.</li>
+</ul>
+</div>
+<div id="strip-redundant-fields-and-resave" class="section level2">
+<h2><span class="header-section-number">3.2</span> Strip redundant fields and resave</h2>
+<pre class="r"><code>pattern_histogram_bins &lt;- pat_hist_bins %&gt;%
+  select(-Country, -AgeMatchGroup) %&gt;%
+  rename(ID = Participant.ID, video = Video, motion_status = Motion.status,
+         pattern_type = Pattern, start_fr = Start_fr, end_fr = End_fr,
+         n_frames = N_fr,
+         corr_bin_ctr = Corr.Bin.Ctr, corr_bin_count = Corr.Bin.Count)
+write_csv(pattern_histogram_bins, &#39;data/pattern_histogram_bins.csv&#39;)</code></pre>
+<pre class="r"><code>speed_histogram_bins &lt;- speed_hist_bins %&gt;%
+  select(-Country, -AgeMatchGroup) %&gt;%
+  rename(ID = Participant.ID, motion_status = Motion.status,
+         chi_square = ChiSquare, df = DF, p_val = Pval,
+         speed_deg_sec = Speed,
+         n_obs = N.obs)
+write_csv(speed_histogram_bins, &#39;data/speed_histogram_bins.csv&#39;)</code></pre>
+<pre class="r"><code>speed_histogram_fits &lt;- speed_hist_fits %&gt;%
+  select(-Country, -AgeMatchGroup) %&gt;%
+  rename(ID = Participant.ID, motion_status = Motion.status, 
+         mean_speed = Mean.spd,
+         median_spd = Median.spd, alpha = a, kappa = k)
+write_csv(speed_histogram_fits, &#39;data/speed_histogram_fits.csv&#39;)</code></pre>
+<p>Next, I will upload <code>pattern_histogram_bins.csv</code>, <code>speed_histogram_bins.csv</code>, and <code>speed_histogram_fits.csv</code> to</p>
+<p>Jayaraman, S., Smith, L.B., Raudies, F. &amp; Gilmore, R.O. (2014). Natural Scene Statistics of Visual Experience Across Development and Culture. Databrary. Retrieved April 5, 2019 from <a href="http://doi.org/10.17910/B7988V" class="uri">http://doi.org/10.17910/B7988V</a>.</p>
+<p>These files are in <a href="https://nyu.databrary.org/volume/81/slot/35545/-" class="uri">https://nyu.databrary.org/volume/81/slot/35545/-</a> or <code>vol_id = 81</code>, <code>session_id = 35545</code>.</p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

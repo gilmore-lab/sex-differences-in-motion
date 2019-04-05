@@ -1,0 +1,126 @@
+---
+title: "Sex differences in experienced optic flow"
+author: "Rick O. Gilmore & Yiming Qian"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    code_folding: show
+    self_contained: false
+params:
+  db_account: rogilmore@psu.edu
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Install packages
+if (!(require(databraryapi))) {
+  devtools::install_github('PLAY-behaviorome/databraryapi')
+}
+library(databraryapi)
+
+if (!(require(tidyverse))) {
+  install.packages('tidyverse')
+}
+library(tidyverse)
+```
+
+# Background
+
+This document analyzes natural optic flow data drawn from 
+
+Jayaraman, S., Smith, L.B., Raudies, F. & Gilmore, R.O. (2014). Natural Scene Statistics of Visual Experience Across Development and Culture. Databrary. Retrieved April 5, 2019 from http://doi.org/10.17910/B7988V.
+
+Infants from India and the U.S. wore a head-mounted camera for several hours during one day.
+Jayaraman et al. used computer vision techniques to extract optic flow patterns and speeds from the videos.
+
+Here, we analyze the data to determine whether there is evidence for sex differences in the speeds of experienced optic flow.
+
+# Data gathering
+
+We lightly modified data stored elsewhere and uploaded them to the Jayaraman et al. Databrary volume.
+
+The (CSV format) data files are in a `materials` folder <https://nyu.databrary.org/volume/81/slot/35545/->
+
+## Work plan
+
+We will do the following:
+
+1. Import the CSVs as data frames using the `databraryapi::read_csv_data_as_df()` command from the `databraryapi` package.
+The package can be found at <https://github.com/PLAY-behaviorome/databraryapi>.
+2. Import the Databrary participant metadata spreadsheet using the `databraryapi::download_session_csv()` command from the `databraryapi` package.
+3. Merge the spreadsheet data with the optic flow data files, one by one, using `dplyr` commands.
+
+**Note:**The `setup` chunk should load the `databraryapi` package. If you are not Rick Gilmore, you will need to render this document from an RStudio console as follows: `rmarkdown::render('sex-diffs-in-flow.Rmd', params = list(db_login=<YOUREMAIL@YOURDOMAIN>))`, where you substitute your Databrary account ID (email) for `<YOUREMAIL@YOURDOMAIN>`.
+
+## Import optic flow CSVs
+
+List the CSVs before we import them. But first, let's assign the `vol_id` and `session_id` variables: `r vol_id <- 81` and `r session_id = 35545`.
+
+```{r}
+databraryapi::list_assets_in_session(vol_id, session_id)
+```
+
+Isn't reproducible science fun?
+
+Now, we import these files noting the `asset_id` values from the table.
+We do this one at a time so we can confirm everything is working.
+
+```{r}
+patt_hist <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165805)
+str(patt_hist)
+```
+
+```{r}
+spd_bins <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165804)
+str(spd_bins)
+```
+
+```{r}
+spd_fits <- databraryapi::read_csv_data_as_df(session_id, asset_id = 165803)
+str(spd_fits)
+```
+
+This is looking good.
+
+## Import participant data
+
+```{r}
+participants <- databraryapi::download_session_csv(vol_id)
+str(participants)
+```
+
+We note that the Databrary API is inconsisent in using periods `.` and underscores `_` in field names.
+We can clean this before we merge with the other data files and possibly drop some variables that aren't really useful.
+
+# Data cleaning
+
+## Clean `participants`
+
+I want to retain `participant.ID` which will match to `ID`, `participant.gender`, and `context.country`.
+It's not essential, but I prefer lower case variable names with underscores as separators.
+Oddly, an age variable is not downloaded.
+We can address that later.
+
+```{r}
+participants <- participants %>%
+  select(participant.ID, participant.gender, context.country) %>%
+  rename(ID = participant.ID, gender = participant.gender, country = context.country)
+```
+
+## Merge files
+
+```{r}
+patt_hist <- dplyr::left_join(patt_hist, participants, by = "ID")
+```
+
+It looks like there may be some inconsistencies in our `ID` variable.
+We should fix those and re-run.
+
+# Visualization
+
+# Analysis
