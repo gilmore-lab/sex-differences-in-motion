@@ -70,8 +70,6 @@ Gilmore, R. O., Raudies, F., & Jayaraman, S. (2015). What accounts for developme
 
 the following function was fit to the speed histogram:
 
-γ(x;k,θ,a)=axk−1exp(−x/θ)θkΓ(k)
-
 $\gamma(x; \kappa, \theta, \alpha)=\alpha\frac{x^{\kappa - 1}exp(-x^{\theta})}{\theta^{\kappa}\Gamma(\kappa)}$
 
 The data file contains `Participant.ID`, `Country`, `AgeMatchGroup`, and `Motion.Status` variables familiar from `data/pattern-histogram-bins.csv`.
