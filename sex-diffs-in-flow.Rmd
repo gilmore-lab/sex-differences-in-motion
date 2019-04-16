@@ -149,5 +149,11 @@ spd_fits <- dplyr::left_join(spd_fits, participants, by = "ID")
 ## Plan
 
 Yiming, this is for you.
+Hi This is Yiming. I would do the following: 
+1. Figure out what is spd_bins, patt_hist, spd-fits. Is it the distribution of speed/optic flow pattern in each frame of the video, or the distribution of mean speed/optic flow pattern in all frames of the video, or the distribution of mean speed/optic flow pattern in all frames of the video of all subjects?
+2. make plots of speed and optic flow pattern between boys and girls, Indian and American, Stationary and Moving
+
+L
+
 
 # Analysis
