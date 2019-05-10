@@ -1,0 +1,48 @@
+---
+title: "research_idea_May_10_2019"
+author: "Yiming"
+date: "5/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Sex difference in motion perception
+Aims:
+1.	It answers whether difference of motion perception is caused by sex (physically inherited) or visual experience (environmental).
+2.	It answers whether neural underpinning of sex difference in motion perception.
+3.	Investigate whether male and female use different perceptual strategies which cause sex difference
+
+## Preliminary analysis 
+Does the speed of optic flow of boy and girl infants differ in their active (walking/crawling) or negative (carrying) visual experience?
+It answers whether the activity preference or sex influence motion perception.
+
+{r load-data}
+
+##	Possible research projects
+1.	Does the choice and time for different type of toys (such as cars, dolls) influence the motion perception/spatial ability between boys and girls? Or motion perception influences toy choice? (Aim 1)
+   - Age range: 2-7
+   - Design: 2 measures: use camera to record children's choice and time on each category of toys with various types of toys (and the time that children makes toys moving); psychophysical experiment on motion perception
+    
+2.  Do the male infants/children pay more attention to the moving objects (Aim 1)?
+   - Age range: 1-3
+   - Design:eye-tracking experiment 
+
+3.	Does visual experiences of female and male differ in older age? How is it correlated to motion perception performance/spatial ability? (Aim 1)
+   - Age range: 1-18
+   - Design: head camera (maybe some data can be collected in PLAY project)
+   
+4.	Do males have faster response (ERP peak time) and higher activation (ERP/fMRI activation) to motion (Aim 2)?
+   - Age range: 1-18
+   - Design: ERP (check previous literature) and fMRI (refer to adult study of Murray et al., 2018)
+   
+5.  Psychological orientation to thing/person (EEG or fMRI; previous finding showed there is same neural activation area and activation to human face)
+
+6.  Does Hormone (such as prenatal androgen) influence the amount of looking at moving objects/male-typed activity interests and engagement? (Aim 1) If so, does hormone correlated with motion perception performance/spatial ability?
+
+7.  (Maybe) When does sex difference occurs? (hard to do in infancy; Aim 1) 
+
+
+
