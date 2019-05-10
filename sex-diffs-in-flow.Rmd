@@ -113,6 +113,7 @@ We can address that later.
 participants <- participants %>%
   select(participant.ID, participant.gender, context.country) %>%
   rename(ID = participant.ID, gender = participant.gender, country = context.country)
+participants$ID <- substr(participants$ID, 1, 5)
 ```
 
 ## Merge files
@@ -154,6 +155,12 @@ Hi This is Yiming. I would do the following:
 2. The existing dataframe includes params (which is db account), participants (including ID, gender and country) , patt_hist, spd_bins, spd_fits
 3. make plots of speed and optic flow pattern between boys and girls, Indian and American, Stationary and Moving
 
+# organize data
+spd_fits$gender =factor(spd_fits$gender)
+spd_fits$country=factor(spd_fits$country)
+spd_fits$motion_status =factor(spd_fits$motion_status)
+write.csv(spd_fits, "data/spd_fits.csv")
+write.csv(patt_hist, "data/patt_hist.csv")
 # plot first
 
 

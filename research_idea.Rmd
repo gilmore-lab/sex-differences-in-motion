@@ -7,21 +7,104 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
 ```
 
 # Sex difference in motion perception
-Aims:
-1.	It answers whether difference of motion perception is caused by sex (physically inherited) or visual experience (environmental).
-2.	It answers whether neural underpinning of sex difference in motion perception.
-3.	Investigate whether male and female use different perceptual strategies which cause sex difference
+### Aims:
+      - Aim 1:	It answers whether difference of motion perception is caused by sex (physically inherited) or visual experience (environmental).
+      - Aim 2:  It answers whether neural underpinning of sex difference in motion perception.
+      - Aim 3:	Investigate whether male and female use different perceptual strategies which cause sex difference
 
 ## Preliminary analysis 
 Does the speed of optic flow of boy and girl infants differ in their active (walking/crawling) or negative (carrying) visual experience?
 It answers whether the activity preference or sex influence motion perception.
 
-{r load-data}
+### speed comparison
+```{r load-data, echo=FALSE}
+spd_fits<-read.csv("data/spd_fits.csv", header=TRUE, sep=",")
+spd_fits<-spd_fits[!spd_fits$ID == "018MT",]
+head(spd_fits)
+```
+Plot (mean speed as DV)
+```{r boxplot-speed, echo=FALSE}
+p <- ggplot(spd_fits, aes(x=gender, y=mean_speed, fill = motion_status)) + 
+    scale_x_discrete(name = "gender") +
+    scale_y_continuous(name = "mean speed") +
+    geom_boxplot()+
+    theme_bw() +
+    theme(plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+              text = element_text(size = 12, family = "Tahoma"),
+              axis.title = element_text(face="bold"),
+              axis.text.x=element_text(size = 11)) 
+     # + scale_fill_discrete(name="Group",
+     #                    breaks=c("T", "U"),
+      #                   labels=c("Control", "Down's"))
+p
+
+```
+```{r lineplot-speed, echo=FALSE}
+df<- spd_fits %>%
+  group_by(gender, motion_status) %>%
+  summarize(total.mean=mean(mean_speed),
+            n=n(),
+            total.se=sd(mean_speed)/sqrt(n))
+
+p1<-ggplot(df, aes(x=gender, y=total.mean, group=motion_status, color=motion_status))+
+         geom_line()+
+        labs(x="gender", y="mean speed")  +
+        geom_pointrange(aes(ymin=total.mean-total.se, ymax=total.mean+total.se))
+         # ggtitle('total translational counts') +
+    #  +  scale_colour_hue(name="group",    #Legend label, use darker colors
+     #                 breaks=c("T", "U"),
+      #              labels=c("Control", "Down's"))+
+       
+p1
+```
+### Linear regression
+#### 3 IVs: gender, country and motion_status
+#### DV: mean_speed
+```{r linear-regression-mean, echo=FALSE}
+linearMod <- lm(mean_speed ~ gender  + country+ motion_status , data=spd_fits, na.action=na.omit)
+summary(linearMod)
+```
+### Linear Regression
+#### DV: median_spd 
+```{r linear-regression-median, echo=FALSE}
+linearMod <- lm(median_spd ~ gender  + country+ motion_status , data=spd_fits, na.action=na.omit)
+summary(linearMod)
+```
+The insignifant gender difference makes some sense because infants have limited lomomotion ability and are often carried by caregivers.
+
+### pattern comparison
+```{r load-patt, echo=FALSE}
+patt_hist<-read.csv("data/patt_hist.csv", header=TRUE, sep=",")
+patt_hist<-patt_hist[!patt_hist$ID == "018MT",]
+head(patt_hist)
+```
+
+```{r lineplot, echo=FALSE}
+df2<- patt_hist %>%
+  group_by(gender, pattern_type,ID) %>%
+  summarize(total.mean=mean(corr_bin_count),
+            n=n(),
+            total.se=sd(corr_bin_count)/sqrt(n))
+
+p1<-ggplot(df2, aes(x=gender, y=total.mean, group=pattern_type, color=pattern_type))+
+         geom_line()+
+        labs(x="gender", y="frequency of pattern")  +
+        geom_pointrange(aes(ymin=total.mean-total.se, ymax=total.mean+total.se))
+         # ggtitle('total translational counts') +
+    #  +  scale_colour_hue(name="group",    #Legend label, use darker colors
+     #                 breaks=c("T", "U"),
+      #              labels=c("Control", "Down's"))+
+       
+p1
+```
 
 ##	Possible research projects
+
 1.	Does the choice and time for different type of toys (such as cars, dolls) influence the motion perception/spatial ability between boys and girls? Or motion perception influences toy choice? (Aim 1)
    - Age range: 2-7
    - Design: 2 measures: use camera to record children's choice and time on each category of toys with various types of toys (and the time that children makes toys moving); psychophysical experiment on motion perception
